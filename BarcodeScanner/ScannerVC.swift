@@ -33,6 +33,19 @@ final class ScannerVC: UIViewController{
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        setupCaptureSession()
+    }
+    
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        guard let previewLayer = previewLayer else {
+            scannerDelegate?.didSurfaceError(error: .invalidDeviceInput)
+            return
+        }
+        previewLayer.frame = view.layer.bounds
+    }
     
     private func setupCaptureSession(){
         guard let viedoCaptureDevice = AVCaptureDevice.default(for: .video) else {
@@ -61,7 +74,7 @@ final class ScannerVC: UIViewController{
             captureSession.addOutput(metaDataOutput)
             
             metaDataOutput.setMetadataObjectsDelegate(self, queue: DispatchQueue.main)
-            metaDataOutput.metadataObjectTypes = [.ean8, .ean8]
+            metaDataOutput.metadataObjectTypes = [.ean8, .ean13]
         }
         else{
             scannerDelegate?.didSurfaceError(error: .invalidDeviceInput)
@@ -94,6 +107,7 @@ extension ScannerVC: AVCaptureMetadataOutputObjectsDelegate {
             scannerDelegate?.didSurfaceError(error: .invalidScannedValue)
             return
         }
+//        captureSession.stopRunning()
         scannerDelegate?.didFind(barcode: barcode)
     }
 }
